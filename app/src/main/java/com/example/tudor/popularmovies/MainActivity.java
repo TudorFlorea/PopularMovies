@@ -1,5 +1,6 @@
 package com.example.tudor.popularmovies;
 
+import android.content.Intent;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -7,6 +8,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,6 +21,11 @@ import com.example.tudor.popularmovies.utils.NetworkUtils;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<ArrayList<Movie>>, MoviesRecyclerViewAdapter.ItemListener {
+
+    private final String ACTION_RESET_LOADER = "action_reset";
+    private final String ACTION_TOP_RATED = "top_rated";
+    private final String ACTION_POPULAR = "most_popular";
+    private final int MOVIES_LOADER_ID = 100;
 
     private RecyclerView mMoviesRV;
 
@@ -31,11 +39,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         GridLayoutManager manager = new GridLayoutManager(this, 2, GridLayoutManager.VERTICAL, false);
         mMoviesRV.setLayoutManager(manager);
 
-        getSupportLoaderManager().restartLoader(1, null, this);
+        getSupportLoaderManager().restartLoader(MOVIES_LOADER_ID, null, this);
     }
 
     @Override
-    public Loader<ArrayList<Movie>> onCreateLoader(int id, Bundle args) {
+    public Loader<ArrayList<Movie>> onCreateLoader(int id, final Bundle args) {
         return new AsyncTaskLoader<ArrayList<Movie>>(this) {
 
             @Override
@@ -46,7 +54,23 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
             @Override
             public ArrayList<Movie> loadInBackground() {
-                return MovieFactory.getTopRatedMovies();
+                if (args != null) {
+                    String action = args.getString(ACTION_RESET_LOADER);
+
+                    switch (action) {
+                        case ACTION_TOP_RATED:
+                            return MovieFactory.getTopRatedMovies();
+                        case ACTION_POPULAR:
+                            return MovieFactory.getMostPopularMovies();
+                        default:
+                            return null;
+
+                    }
+                } else {
+                    return MovieFactory.getTopRatedMovies();
+                }
+
+
             }
         };
     }
@@ -63,7 +87,40 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     @Override
-    public void onItemClick(Movie movie) {
-        Toast.makeText(this, movie.getImagePath(), Toast.LENGTH_SHORT).show();
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        switch (id) {
+            case R.id.action_popular:
+                resetMoviesLoader(ACTION_POPULAR);
+                break;
+            case R.id.action_top_rated:
+                resetMoviesLoader(ACTION_TOP_RATED);
+                break;
+            default:
+                return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public void onItemClick(Movie movie) {
+        Intent i = new Intent(MainActivity.this, DetailsActivity.class);
+        i.putExtra("movie", movie);
+        startActivity(i);
+    }
+
+    private void resetMoviesLoader(String action) {
+        Bundle bundle = new Bundle();
+        bundle.putString(ACTION_RESET_LOADER, action);
+        getSupportLoaderManager().restartLoader(MOVIES_LOADER_ID, bundle, this);
+    }
+
 }

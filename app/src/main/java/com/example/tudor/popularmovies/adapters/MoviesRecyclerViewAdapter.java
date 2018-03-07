@@ -65,7 +65,7 @@ public class MoviesRecyclerViewAdapter extends RecyclerView.Adapter<MoviesRecycl
         public void setData(Movie movieItem) {
             this.movie = movieItem;
             Picasso.with(mContext)
-                    .load(movieItem.getImagePath())
+                    .load(movieItem.getPosterLink())
                     .into(imageView);
         }
 

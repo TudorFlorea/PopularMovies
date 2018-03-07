@@ -22,36 +22,65 @@ public class MovieFactory {
         ArrayList<Movie> moviesList = new ArrayList<>();
 
         try {
-            JSONObject topRatedMoviesJson = JsonUtils.jsonObjectFromString(NetworkUtils.getTestUrl());
-
-            Log.v("MovieFactory: ", "1");
+            JSONObject topRatedMoviesJson = JsonUtils.jsonObjectFromString(NetworkUtils.getTopRatedRawJson());
 
             JSONArray topRatedMoviesResults = topRatedMoviesJson.getJSONArray("results");
 
-            Log.v("MovieFactory: ", "2");
 
             for (int i = 0; i < topRatedMoviesResults.length(); i++) {
                 JSONObject movieJson = topRatedMoviesResults.getJSONObject(i);
-                long id = movieJson.getLong("id");
-                String title = movieJson.getString("title");
-                String releseDate = movieJson.getString("release_date");
-                String posterPath = movieJson.getString("poster_path");
-                double voteAverage = movieJson.getDouble("vote_average");
-                String plot = movieJson.getString("overview");
 
-                moviesList.add(new Movie(id, title, releseDate, posterPath, voteAverage, plot));
+                moviesList.add(extractDataFromJsonObject(movieJson));
 
             }
-            Log.v("MovieFactory: ", "RETURNED ARRAY LIST");
 
             return moviesList;
         } catch (JSONException jse) {
             jse.printStackTrace();
-            Log.v("MovieFactory: ", "NULL");
             return null;
         }
 
+    }
 
+
+    public static ArrayList<Movie> getMostPopularMovies() {
+        ArrayList<Movie> moviesList = new ArrayList<>();
+
+        try {
+            JSONObject topRatedMoviesJson = JsonUtils.jsonObjectFromString(NetworkUtils.getMostPopularRawJson());
+
+            JSONArray topRatedMoviesResults = topRatedMoviesJson.getJSONArray("results");
+
+
+            for (int i = 0; i < topRatedMoviesResults.length(); i++) {
+                JSONObject movieJson = topRatedMoviesResults.getJSONObject(i);
+
+                moviesList.add(extractDataFromJsonObject(movieJson));
+
+            }
+
+            return moviesList;
+        } catch (JSONException jse) {
+            jse.printStackTrace();
+            return null;
+        }
+    }
+
+    private static Movie extractDataFromJsonObject(JSONObject movieJsonObj) {
+        try {
+            long id = movieJsonObj.getLong("id");
+            String title = movieJsonObj.getString("title");
+            String releseDate = movieJsonObj.getString("release_date");
+            String posterPath = movieJsonObj.getString("poster_path");
+            String backdropPath = movieJsonObj.getString("backdrop_path");
+            double voteAverage = movieJsonObj.getDouble("vote_average");
+            String plot = movieJsonObj.getString("overview");
+
+            return new Movie(id, title, releseDate, posterPath, backdropPath, voteAverage, plot);
+        } catch (JSONException jse) {
+            jse.printStackTrace();
+            return null;
+        }
     }
 
 }
