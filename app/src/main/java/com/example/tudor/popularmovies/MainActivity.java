@@ -16,6 +16,7 @@ import android.widget.Toast;
 import com.example.tudor.popularmovies.adapters.MoviesRecyclerViewAdapter;
 import com.example.tudor.popularmovies.data.Movie;
 import com.example.tudor.popularmovies.data.MovieFactory;
+import com.example.tudor.popularmovies.utils.InternetUtils;
 import com.example.tudor.popularmovies.utils.NetworkUtils;
 
 import java.util.ArrayList;
@@ -34,12 +35,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mMoviesRV = (RecyclerView) findViewById(R.id.movies_rv);
+        mMoviesRV = findViewById(R.id.movies_rv);
 
         GridLayoutManager manager = new GridLayoutManager(this, 2, GridLayoutManager.VERTICAL, false);
         mMoviesRV.setLayoutManager(manager);
 
-        getSupportLoaderManager().restartLoader(MOVIES_LOADER_ID, null, this);
+        if (InternetUtils.isNetworkAvailable(this)) {
+            getSupportLoaderManager().restartLoader(MOVIES_LOADER_ID, null, this);
+            getSupportActionBar().setTitle(R.string.top_rated_title);
+        } else {
+            //TODO handle the lack of internet on the UI
+        }
+
+
     }
 
     @Override
@@ -99,9 +107,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         switch (id) {
             case R.id.action_popular:
                 resetMoviesLoader(ACTION_POPULAR);
+                getSupportActionBar().setTitle(R.string.most_popular_title);
                 break;
             case R.id.action_top_rated:
                 resetMoviesLoader(ACTION_TOP_RATED);
+                getSupportActionBar().setTitle(R.string.top_rated_title);
                 break;
             default:
                 return false;
@@ -113,14 +123,18 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     public void onItemClick(Movie movie) {
         Intent i = new Intent(MainActivity.this, DetailsActivity.class);
-        i.putExtra("movie", movie);
+        i.putExtra(getResources().getString(R.string.intent_movie_key), movie);
         startActivity(i);
     }
 
     private void resetMoviesLoader(String action) {
         Bundle bundle = new Bundle();
         bundle.putString(ACTION_RESET_LOADER, action);
-        getSupportLoaderManager().restartLoader(MOVIES_LOADER_ID, bundle, this);
+        if (InternetUtils.isNetworkAvailable(this)) {
+            getSupportLoaderManager().restartLoader(MOVIES_LOADER_ID, bundle, this);
+        } else {
+            //TODO handle the lack of internet on the UI
+        }
     }
 
 }

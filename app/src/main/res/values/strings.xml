@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">PopularMovies</string>
+
+    <string name="intent_movie_key">movie</string>
+
+
+    <string name="top_rated_title">Top Rated</string>
+    <string name="most_popular_title">Most Popular</string>
+
+
 </resources>

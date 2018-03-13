@@ -17,6 +17,21 @@ import java.util.ArrayList;
 
 public class MovieFactory {
 
+    private static final String MOVIES_RESULTS = "results";
+    private static final String MOVIE_ID = "id";
+    private static final String MOVIE_TITLE = "title";
+    private static final String MOVIE_RELEASE_DATE = "release_date";
+    private static final String MOVIE_POSTER_PATH = "poster_path";
+    private static final String MOVIE_BACKDROP_PATH = "backdrop_path";
+    private static final String MOVIE_VOTE_AVERAGE = "vote_average";
+    private static final String MOVIE_OVERVIEW = "overview";
+
+
+    /**
+     * function that makes a HTTP request to get the top rated movies and makes Movie objects out of the json and adds them in an ArrayList
+     * @return ArrayList with top rated movies
+     */
+
     public static ArrayList<Movie> getTopRatedMovies() {
 
         ArrayList<Movie> moviesList = new ArrayList<>();
@@ -24,7 +39,7 @@ public class MovieFactory {
         try {
             JSONObject topRatedMoviesJson = JsonUtils.jsonObjectFromString(NetworkUtils.getTopRatedRawJson());
 
-            JSONArray topRatedMoviesResults = topRatedMoviesJson.getJSONArray("results");
+            JSONArray topRatedMoviesResults = topRatedMoviesJson.optJSONArray(MOVIES_RESULTS);
 
 
             for (int i = 0; i < topRatedMoviesResults.length(); i++) {
@@ -43,13 +58,17 @@ public class MovieFactory {
     }
 
 
+    /**
+     * function that makes a HTTP request to get the popular movies movies and makes Movie objects out of the json and adds them in an ArrayList
+     * @return ArrayList with popular movies
+     */
     public static ArrayList<Movie> getMostPopularMovies() {
         ArrayList<Movie> moviesList = new ArrayList<>();
 
         try {
             JSONObject topRatedMoviesJson = JsonUtils.jsonObjectFromString(NetworkUtils.getMostPopularRawJson());
 
-            JSONArray topRatedMoviesResults = topRatedMoviesJson.getJSONArray("results");
+            JSONArray topRatedMoviesResults = topRatedMoviesJson.getJSONArray(MOVIES_RESULTS);
 
 
             for (int i = 0; i < topRatedMoviesResults.length(); i++) {
@@ -66,15 +85,21 @@ public class MovieFactory {
         }
     }
 
+    /**
+     *
+     * @param movieJsonObj
+     * @return Movie object
+     */
+
     private static Movie extractDataFromJsonObject(JSONObject movieJsonObj) {
         try {
-            long id = movieJsonObj.getLong("id");
-            String title = movieJsonObj.getString("title");
-            String releseDate = movieJsonObj.getString("release_date");
-            String posterPath = movieJsonObj.getString("poster_path");
-            String backdropPath = movieJsonObj.getString("backdrop_path");
-            double voteAverage = movieJsonObj.getDouble("vote_average");
-            String plot = movieJsonObj.getString("overview");
+            long id = movieJsonObj.optLong(MOVIE_ID);
+            String title = movieJsonObj.getString(MOVIE_TITLE);
+            String releseDate = movieJsonObj.optString(MOVIE_RELEASE_DATE);
+            String posterPath = movieJsonObj.optString(MOVIE_POSTER_PATH);
+            String backdropPath = movieJsonObj.optString(MOVIE_BACKDROP_PATH);
+            double voteAverage = movieJsonObj.optDouble(MOVIE_VOTE_AVERAGE);
+            String plot = movieJsonObj.optString(MOVIE_OVERVIEW);
 
             return new Movie(id, title, releseDate, posterPath, backdropPath, voteAverage, plot);
         } catch (JSONException jse) {

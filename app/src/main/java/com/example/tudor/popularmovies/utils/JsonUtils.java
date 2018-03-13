@@ -9,33 +9,12 @@ import org.json.JSONObject;
 
 public class JsonUtils {
 
-    public static String getStringFromJsonObject (JSONObject jsonObject, String key) {
-        try {
-            return jsonObject.getString(key);
-        } catch (JSONException jse) {
-            jse.printStackTrace();
-            return null;
-        }
-    }
-
-    public static int getIntFromJsonObject (JSONObject jsonObject, String key) {
-        try {
-            return jsonObject.getInt(key);
-        } catch (JSONException jse) {
-            jse.printStackTrace();
-            return 0;
-        }
-    }
-
-    public static boolean getBooleanFromJsonObject (JSONObject jsonObject, String key) {
-        try {
-            return jsonObject.getBoolean(key);
-        } catch (JSONException jse) {
-            jse.printStackTrace();
-            return false;
-        }
-    }
-
+    /**
+     * function that returns a json object from a json formatted string or null.
+     * @param rawJson
+     * @return JSONObject or null
+     */
+    
     public static JSONObject jsonObjectFromString(String rawJson) {
         try {
             return new JSONObject(rawJson);

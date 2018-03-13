@@ -1,7 +1,5 @@
 package com.example.tudor.popularmovies.utils;
 
-import android.util.Log;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -25,7 +23,13 @@ public class NetworkUtils {
     private static final String MOST_POPULAR_URL = BASE_URL + MOST_POPULAR_ENDPOINT + API_KEY_QUERY_PARAM + API_KEY;
     private static final String TOP_RATED_URL = BASE_URL + TOP_RATED_ENDPOINT + API_KEY_QUERY_PARAM + API_KEY;
 
-    public static String getResponseFromHttpUrl(URL url) {
+    /**
+     * function that makes a HTTP request using the OkHttp library and returns the raw String response from the request
+     * @param url - api call URL
+     * @return String - the raw Json response from the HTTP request
+     */
+
+    private static String getResponseFromHttpUrl(URL url) {
 
         OkHttpClient client = new OkHttpClient();
 
@@ -44,14 +48,29 @@ public class NetworkUtils {
 
     }
 
+    /**
+     * function that makes an api call to retrieve the most popular movies Json
+     * @return raw json string with the most popular movies
+     */
+
     public static String getMostPopularRawJson() {
             return getResponseFromHttpUrl(buildUrlFromString(MOST_POPULAR_URL));
     }
 
+    /**
+     * function that makes an api call to retrieve the top rated movies Json
+     * @return raw json string with the top rated movies
+     */
+
     public static String getTopRatedRawJson() {
-        Log.v("NETOWK_URILS: ", TOP_RATED_URL);
         return getResponseFromHttpUrl(buildUrlFromString(TOP_RATED_URL));
     }
+
+    /**
+     * function that turns a string in a URL object
+     * @param s - URL string
+     * @return a new URL object or throws a MalformedURLException and returns null
+     */
 
     private static URL buildUrlFromString (String s) {
         try {
