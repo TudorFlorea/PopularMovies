@@ -14,7 +14,7 @@ public class JsonUtils {
      * @param rawJson
      * @return JSONObject or null
      */
-    
+
     public static JSONObject jsonObjectFromString(String rawJson) {
         try {
             return new JSONObject(rawJson);

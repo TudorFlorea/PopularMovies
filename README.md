@@ -1,4 +1,3 @@
-# PopularMoviesStage1
 # Popular Movies Stage 1 project for the Udacity Android Nanodegree Program
 
 ## Project Overview

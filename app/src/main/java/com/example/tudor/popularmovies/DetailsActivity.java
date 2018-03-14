@@ -9,12 +9,15 @@ import android.widget.TextView;
 import com.example.tudor.popularmovies.data.Movie;
 import com.squareup.picasso.Picasso;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class DetailsActivity extends AppCompatActivity {
 
-    private ImageView mBackdropImageView;
-    private TextView mVoteAverageTextView;
-    private TextView mMovieTitleTextView;
-    private TextView mPlotTextView;
+    @BindView(R.id.landscape_poster_iv) ImageView mBackdropImageView;
+    @BindView(R.id.movie_vote_average_tv) TextView mVoteAverageTextView;
+    @BindView(R.id.movie_title_tv) TextView mMovieTitleTextView;
+    @BindView(R.id.movie_plot_tv) TextView mPlotTextView;
 
 
     @Override
@@ -32,10 +35,7 @@ public class DetailsActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_details);
 
-        mBackdropImageView = findViewById(R.id.landscape_poster_iv);
-        mVoteAverageTextView = findViewById(R.id.movie_vote_average_tv);
-        mMovieTitleTextView = findViewById(R.id.movie_title_tv);
-        mPlotTextView = findViewById(R.id.movie_plot_tv);
+        ButterKnife.bind(this);
 
 
         try {
@@ -45,7 +45,11 @@ public class DetailsActivity extends AppCompatActivity {
             String movieTitleAndYear = m.getTitleAndYear();
             String plot = m.getPlot();
 
-            Picasso.with(this).load(poster).into(mBackdropImageView);
+            Picasso.with(this)
+                    .load(poster)
+                    .placeholder(R.drawable.walpaper_placeholder)
+                    .error(R.drawable.walpaper_error)
+                    .into(mBackdropImageView);
 
             mVoteAverageTextView.setText(String.valueOf(voteAverage));
             mMovieTitleTextView.setText(movieTitleAndYear);

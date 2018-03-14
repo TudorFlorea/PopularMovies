@@ -8,6 +8,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -21,23 +23,27 @@ import com.example.tudor.popularmovies.utils.NetworkUtils;
 
 import java.util.ArrayList;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<ArrayList<Movie>>, MoviesRecyclerViewAdapter.ItemListener {
 
     private final String ACTION_RESET_LOADER = "action_reset";
     private final String ACTION_TOP_RATED = "top_rated";
     private final String ACTION_POPULAR = "most_popular";
     private final int MOVIES_LOADER_ID = 100;
+    private final int MOVIE_POSTER_WIDTH = 185;
 
-    private RecyclerView mMoviesRV;
+    @BindView(R.id.movies_rv) RecyclerView mMoviesRV;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mMoviesRV = findViewById(R.id.movies_rv);
+        ButterKnife.bind(this);
 
-        GridLayoutManager manager = new GridLayoutManager(this, 2, GridLayoutManager.VERTICAL, false);
+        GridLayoutManager manager = new GridLayoutManager(this, numberOfColumns(), GridLayoutManager.VERTICAL, false);
         mMoviesRV.setLayoutManager(manager);
 
         if (InternetUtils.isNetworkAvailable(this)) {
@@ -135,6 +141,20 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         } else {
             //TODO handle the lack of internet on the UI
         }
+    }
+
+    private int numberOfColumns() {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int widthDivider = MOVIE_POSTER_WIDTH * 2;
+        int width = displayMetrics.widthPixels;
+        int nColumns = width / widthDivider;
+        if (nColumns < 2) {
+            return 2;
+        } else {
+            return nColumns;
+        }
+
     }
 
 }
