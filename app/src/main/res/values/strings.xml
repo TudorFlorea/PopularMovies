@@ -6,6 +6,6 @@
 
     <string name="top_rated_title">Top Rated</string>
     <string name="most_popular_title">Most Popular</string>
-
+    <string name="favorite_title">Favorites</string>
 
 </resources>

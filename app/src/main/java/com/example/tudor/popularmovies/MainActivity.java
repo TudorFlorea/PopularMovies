@@ -1,6 +1,8 @@
 package com.example.tudor.popularmovies;
 
 import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -28,6 +30,8 @@ import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<ArrayList<Movie>>, MoviesRecyclerViewAdapter.ItemListener {
 
+    private BottomNavigationView mBottomNavigationView;
+
     private final String ACTION_RESET_LOADER = "action_reset";
     private final String ACTION_TOP_RATED = "top_rated";
     private final String ACTION_POPULAR = "most_popular";
@@ -45,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         GridLayoutManager manager = new GridLayoutManager(this, numberOfColumns(), GridLayoutManager.VERTICAL, false);
         mMoviesRV.setLayoutManager(manager);
+
+        setupBottomNavigation();
 
         if (InternetUtils.isNetworkAvailable(this)) {
             getSupportLoaderManager().restartLoader(MOVIES_LOADER_ID, null, this);
@@ -155,6 +161,32 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             return nColumns;
         }
 
+    }
+
+    private void setupBottomNavigation() {
+        mBottomNavigationView = findViewById(R.id.bottom_navigation);
+
+        mBottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+
+                switch (item.getItemId()) {
+                    case R.id.action_bottom_most_popular:
+                        resetMoviesLoader(ACTION_POPULAR);
+                        return true;
+
+                    case R.id.action_bottom_top_rated:
+                        resetMoviesLoader(ACTION_TOP_RATED);
+                        return true;
+
+                    case R.id.action_bottom_favorite:
+                        Toast.makeText(MainActivity.this, "Favorite", Toast.LENGTH_SHORT).show();
+                        return true;
+                }
+
+                return false;
+            }
+        });
     }
 
 }

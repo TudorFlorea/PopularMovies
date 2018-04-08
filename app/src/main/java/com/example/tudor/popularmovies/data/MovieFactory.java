@@ -25,6 +25,18 @@ public class MovieFactory {
     private static final String MOVIE_BACKDROP_PATH = "backdrop_path";
     private static final String MOVIE_VOTE_AVERAGE = "vote_average";
     private static final String MOVIE_OVERVIEW = "overview";
+    private static final String MOVIE_REVIEWS = "reviews";
+    private static final String REVIEW_RESULTS = "results";
+    private static final String REVIEW_AUTHOR = "author";
+    private static final String REVIEW_CONTENT = "content";
+    private static final String REVIEW_ID = "id";
+    private static final String REVIEW_URL = "url";
+    private static final String MOVIE_VIDEOS = "videos";
+    private static final String VIDEO_RESULTS = "results";
+    private static final String VIDEO_ID = "id";
+    private static final String VIDEO_KEY = "key";
+    private static final String VIDEO_NAME = "name";
+    private static final String VIDEO_SITE = "site";
 
 
     /**
@@ -45,7 +57,7 @@ public class MovieFactory {
             for (int i = 0; i < topRatedMoviesResults.length(); i++) {
                 JSONObject movieJson = topRatedMoviesResults.getJSONObject(i);
 
-                moviesList.add(extractDataFromJsonObject(movieJson));
+                moviesList.add(extractMovieFromJsonObject(movieJson));
 
             }
 
@@ -74,7 +86,7 @@ public class MovieFactory {
             for (int i = 0; i < topRatedMoviesResults.length(); i++) {
                 JSONObject movieJson = topRatedMoviesResults.getJSONObject(i);
 
-                moviesList.add(extractDataFromJsonObject(movieJson));
+                moviesList.add(extractMovieFromJsonObject(movieJson));
 
             }
 
@@ -85,27 +97,108 @@ public class MovieFactory {
         }
     }
 
+
+    public static Movie getCommentsAndReviews(String id) {
+        
+            JSONObject movieJson = JsonUtils.jsonObjectFromString(NetworkUtils.getMovieRawJson(id));
+            return extractMovieFromJsonObject(movieJson);
+    }
+
     /**
      *
      * @param movieJsonObj
      * @return Movie object
      */
 
-    private static Movie extractDataFromJsonObject(JSONObject movieJsonObj) {
-        try {
-            long id = movieJsonObj.optLong(MOVIE_ID);
-            String title = movieJsonObj.getString(MOVIE_TITLE);
-            String releseDate = movieJsonObj.optString(MOVIE_RELEASE_DATE);
-            String posterPath = movieJsonObj.optString(MOVIE_POSTER_PATH);
-            String backdropPath = movieJsonObj.optString(MOVIE_BACKDROP_PATH);
-            double voteAverage = movieJsonObj.optDouble(MOVIE_VOTE_AVERAGE);
-            String plot = movieJsonObj.optString(MOVIE_OVERVIEW);
+    private static Movie extractMovieFromJsonObject(JSONObject movieJsonObj) {
 
-            return new Movie(id, title, releseDate, posterPath, backdropPath, voteAverage, plot);
-        } catch (JSONException jse) {
-            jse.printStackTrace();
-            return null;
+            long id;
+            String title;
+            String releseDate;
+            String posterPath ;
+            String backdropPath;
+            double voteAverage;
+            String plot;
+            ArrayList<Trailer> trailers = new ArrayList<>();
+            ArrayList<Review> reviews = new ArrayList<>();
+
+            id = movieJsonObj.has(MOVIE_ID) ? movieJsonObj.optLong(MOVIE_ID) : 0;
+            title = movieJsonObj.has(MOVIE_TITLE) ? movieJsonObj.optString(MOVIE_TITLE) : null;
+            releseDate = movieJsonObj.has(MOVIE_RELEASE_DATE) ? movieJsonObj.optString(MOVIE_RELEASE_DATE) : null;
+            posterPath = movieJsonObj.has(MOVIE_POSTER_PATH) ? movieJsonObj.optString(MOVIE_POSTER_PATH) : null;
+            backdropPath = movieJsonObj.has(MOVIE_BACKDROP_PATH) ? movieJsonObj.optString(MOVIE_BACKDROP_PATH) : null;
+            voteAverage = movieJsonObj.has(MOVIE_VOTE_AVERAGE) ? movieJsonObj.optDouble(MOVIE_VOTE_AVERAGE) : 0;
+            plot = movieJsonObj.has(MOVIE_OVERVIEW) ? movieJsonObj.optString(MOVIE_OVERVIEW) : null;
+
+            if (movieJsonObj.has(MOVIE_REVIEWS)) {
+                JSONObject reviewsJsonObject = movieJsonObj.optJSONObject(MOVIE_REVIEWS);
+                if (reviewsJsonObject.has(REVIEW_RESULTS)) {
+                    reviews = extractReviewsFromJsonArray(reviewsJsonObject.optJSONArray(REVIEW_RESULTS));
+                }
+
+            }
+
+            if (movieJsonObj.has(MOVIE_VIDEOS)) {
+                JSONObject videosJsonObject = movieJsonObj.optJSONObject(MOVIE_VIDEOS);
+                if (videosJsonObject.has(VIDEO_RESULTS)) {
+                    trailers = extractTrailersFromJsonArray(videosJsonObject.optJSONArray(VIDEO_RESULTS));
+                }
+            }
+
+            return new Movie(id, title, releseDate, posterPath, backdropPath, voteAverage, plot, reviews, trailers);
+
+    }
+
+    private static ArrayList<Review> extractReviewsFromJsonArray(JSONArray movieReviews) {
+
+            ArrayList<Review> reviews = new ArrayList<>();
+
+            JSONObject movieReview;
+            String author;
+            String content;
+            String id;
+            String url;
+
+            for (int i = 0; i < movieReviews.length(); i++) {
+
+                movieReview = movieReviews.optJSONObject(i);
+
+                author = movieReview.optString(REVIEW_AUTHOR, "");
+                content = movieReview.optString(REVIEW_CONTENT, "");
+                id = movieReview.optString(REVIEW_ID, "");
+                url = movieReview.optString(REVIEW_URL, "");
+
+                reviews.add(new Review(id, author, content, url));
+
+            }
+
+        return reviews;
+    }
+
+    private static ArrayList<Trailer> extractTrailersFromJsonArray(JSONArray movieTrailers) {
+
+        ArrayList<Trailer> trailers = new ArrayList<>();
+
+        JSONObject movieTrailer;
+        String id;
+        String key;
+        String name;
+        String site;
+
+        for (int i = 0; i < movieTrailers.length(); i++) {
+
+            movieTrailer = movieTrailers.optJSONObject(i);
+
+            id = movieTrailer.optString(VIDEO_ID, "");
+            key = movieTrailer.optString(VIDEO_KEY, "");
+            name = movieTrailer.optString(VIDEO_NAME, "");
+            site = movieTrailer.optString(VIDEO_SITE, "");
+
+            trailers.add(new Trailer(id, key, name, site));
+
         }
+
+        return trailers;
     }
 
 }

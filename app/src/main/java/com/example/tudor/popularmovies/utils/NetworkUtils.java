@@ -19,6 +19,10 @@ public class NetworkUtils {
     private static final String BASE_URL = "http://api.themoviedb.org/3";
     private static final String MOST_POPULAR_ENDPOINT = "/movie/popular";
     private static final String TOP_RATED_ENDPOINT = "/movie/top_rated";
+    private static final String MOVIE_ENDPOINT = "/movie/";
+    private static final String VIDEOS = "videos";
+    private static final String REVIEWS = "reviews";
+    private static final String APPED_TO_RESPONSE = "&append_to_response";
 
     private static final String MOST_POPULAR_URL = BASE_URL + MOST_POPULAR_ENDPOINT + API_KEY_QUERY_PARAM + API_KEY;
     private static final String TOP_RATED_URL = BASE_URL + TOP_RATED_ENDPOINT + API_KEY_QUERY_PARAM + API_KEY;
@@ -45,6 +49,15 @@ public class NetworkUtils {
             ioe.printStackTrace();
             return null;
         }
+
+    }
+
+    public static String getMovieRawJson(String id) {
+        //https://api.themoviedb.org/3/movie/284054?api_key=ccb006f083a8e8709345d592bf884d6f&append_to_response=videos,reviews
+
+        String movieUrl = BASE_URL + MOVIE_ENDPOINT + id + API_KEY_QUERY_PARAM + API_KEY + APPED_TO_RESPONSE + VIDEOS + "," + REVIEWS;
+
+        return getResponseFromHttpUrl(buildUrlFromString(movieUrl));
 
     }
 

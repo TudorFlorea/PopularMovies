@@ -3,6 +3,8 @@ package com.example.tudor.popularmovies.data;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
+
 /**
  * Created by tudor on 04.03.2018.
  */
@@ -18,11 +20,13 @@ public class Movie implements Parcelable {
     private String mBackdropLink;
     private double mVoteAverage;
     private String mPlot;
+    private ArrayList<Review> mReviews;
+    private ArrayList<Trailer> mTrailers;
 
     private final String MOVIE_POSTER_BASE_URL = "http://image.tmdb.org/t/p/w185";
     private final String MOVIE_BACKDROP_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/w500";
 
-    public Movie(long id, String title, String releaseDate, String posterPath, String backdropPath, double voteAverage, String plot) {
+    public Movie(long id, String title, String releaseDate, String posterPath, String backdropPath, double voteAverage, String plot, ArrayList<Review> reviews, ArrayList<Trailer> trailers) {
         this.mId = id;
         this.mTitle = title;
         this.mReleaseDate = releaseDate;
@@ -32,6 +36,8 @@ public class Movie implements Parcelable {
         this.mVoteAverage = voteAverage;
         this.mPlot = plot;
         this.mTitleAndYear = buildTitleAndYear();
+        this.mReviews = reviews;
+        this.mTrailers = trailers;
     }
 
     public String buildPosterPath(String path) {
@@ -78,6 +84,14 @@ public class Movie implements Parcelable {
         return this.mTitleAndYear;
     }
 
+    public ArrayList<Review> getReviews() {
+        return this.mReviews;
+    }
+
+    public ArrayList<Trailer> getTrailers() {
+        return this.mTrailers;
+    }
+
     private String buildReleaseYear(String date) {
         return date.substring(0, 4);
     }
@@ -85,6 +99,7 @@ public class Movie implements Parcelable {
     private String buildTitleAndYear() {
         return this.mTitle + " (" + this.mReleaseYear + ")";
     }
+
 
     protected Movie(Parcel in) {
         mId = in.readLong();
