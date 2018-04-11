@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.FloatingActionButton
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/flexible_example_fab"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginRight="32dp"
+    android:elevation="8dp"
+    android:src="@drawable/ic_favorite_white"
+    app:layout_anchor="@id/description_cv"
+    app:layout_anchorGravity="top|right|end"
+    tools:ignore="RtlHardcoded" />

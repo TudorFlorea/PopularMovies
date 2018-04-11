@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/description_cv"
+    android:background="#fff"
+    android:layout_margin="8dp"
+    >
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/details_activity_margin"
+            android:textSize="@dimen/large_text_size"
+            android:textStyle="bold"
+            android:text="Plot"
+            />
+
+        <TextView
+            android:id="@+id/movie_plot_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/details_activity_margin"
+            android:textSize="@dimen/small_text_size" />
+
+        <TextView
+            android:id="@+id/release_date_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="italic"
+            android:layout_marginLeft="@dimen/details_activity_margin"
+            android:textSize="@dimen/small_text_size"
+            android:text="Relese date: 28-10-2018"
+            />
+
+    </LinearLayout>
+
+
+</android.support.v7.widget.CardView>

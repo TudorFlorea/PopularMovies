@@ -8,4 +8,6 @@
     <string name="most_popular_title">Most Popular</string>
     <string name="favorite_title">Favorites</string>
 
+    <string name="release_date">Release date: </string>
+
 </resources>

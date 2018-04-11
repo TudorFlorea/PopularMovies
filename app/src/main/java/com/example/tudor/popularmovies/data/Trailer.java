@@ -11,8 +11,12 @@ public class Trailer {
     private String mName;
     private String mSite;
 
-    private final String SITE_YOUTUBE = "youtube";
+    private final String SITE_YOUTUBE = "YouTube";
     private final String SITE_YOUTUBE_BASE_URL = "https://www.youtube.com/watch?v=";
+    //https://img.youtube.com/vi/dxWvtMOGAhw/0.jpg
+    private final String YOUTUBE_THUMBNAIL_BASE_URL = "https://img.youtube.com/vi/";
+    private final String YOUTUBE_THUMBNAIL_IMAGE = "/0.jpg";
+
 
     public Trailer(String id, String key, String name, String site) {
         this.mId = id;
@@ -37,7 +41,7 @@ public class Trailer {
         return this.mSite;
     }
 
-    public String getUrl() {
+    public String getVideoUrl() {
 
         switch (getSite()) {
             case SITE_YOUTUBE:
@@ -52,6 +56,19 @@ public class Trailer {
         }
     }
 
+    public String getImageUrl() {
+        switch (getSite()) {
+            case SITE_YOUTUBE:
+                return YOUTUBE_THUMBNAIL_BASE_URL + getKey() + YOUTUBE_THUMBNAIL_IMAGE;
+            default:
+                try {
+                    throw new Exception("Unknown site: " + getSite());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return null;
+                }
+        }
+    }
 
 
 }

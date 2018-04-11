@@ -25,6 +25,8 @@ public class MovieFactory {
     private static final String MOVIE_BACKDROP_PATH = "backdrop_path";
     private static final String MOVIE_VOTE_AVERAGE = "vote_average";
     private static final String MOVIE_OVERVIEW = "overview";
+    private static final String MOVIE_VOTE_COUNT = "vote_count";
+    private static final String MOVIE_POPULARITY = "popularity";
     private static final String MOVIE_REVIEWS = "reviews";
     private static final String REVIEW_RESULTS = "results";
     private static final String REVIEW_AUTHOR = "author";
@@ -98,9 +100,14 @@ public class MovieFactory {
     }
 
 
-    public static Movie getCommentsAndReviews(String id) {
-        
+    public static Movie movieWithId(String id) {
+
             JSONObject movieJson = JsonUtils.jsonObjectFromString(NetworkUtils.getMovieRawJson(id));
+
+            String stringTag = movieJson == null ? "Json is null" :  movieJson.toString();
+
+        Log.v("MOVIE FACTORY: ", stringTag);
+
             return extractMovieFromJsonObject(movieJson);
     }
 
@@ -119,6 +126,8 @@ public class MovieFactory {
             String backdropPath;
             double voteAverage;
             String plot;
+            long voteCount;
+            double popularity;
             ArrayList<Trailer> trailers = new ArrayList<>();
             ArrayList<Review> reviews = new ArrayList<>();
 
@@ -129,6 +138,8 @@ public class MovieFactory {
             backdropPath = movieJsonObj.has(MOVIE_BACKDROP_PATH) ? movieJsonObj.optString(MOVIE_BACKDROP_PATH) : null;
             voteAverage = movieJsonObj.has(MOVIE_VOTE_AVERAGE) ? movieJsonObj.optDouble(MOVIE_VOTE_AVERAGE) : 0;
             plot = movieJsonObj.has(MOVIE_OVERVIEW) ? movieJsonObj.optString(MOVIE_OVERVIEW) : null;
+            voteCount = movieJsonObj.has(MOVIE_VOTE_COUNT) ? movieJsonObj.optLong(MOVIE_VOTE_COUNT) : 0;
+            popularity = movieJsonObj.has(MOVIE_POPULARITY) ? movieJsonObj.optDouble(MOVIE_POPULARITY) : 0;
 
             if (movieJsonObj.has(MOVIE_REVIEWS)) {
                 JSONObject reviewsJsonObject = movieJsonObj.optJSONObject(MOVIE_REVIEWS);
@@ -145,7 +156,7 @@ public class MovieFactory {
                 }
             }
 
-            return new Movie(id, title, releseDate, posterPath, backdropPath, voteAverage, plot, reviews, trailers);
+            return new Movie(id, title, releseDate, posterPath, backdropPath, voteAverage, plot, voteCount, popularity, reviews, trailers);
 
     }
 

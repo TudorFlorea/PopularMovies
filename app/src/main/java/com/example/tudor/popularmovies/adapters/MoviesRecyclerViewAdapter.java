@@ -7,8 +7,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.example.tudor.popularmovies.DetailsActivity;
 import com.example.tudor.popularmovies.R;
 import com.example.tudor.popularmovies.data.Movie;
+import com.example.tudor.popularmovies.utils.InterfaceUtils.MovieItemListener;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -24,10 +26,10 @@ public class MoviesRecyclerViewAdapter extends RecyclerView.Adapter<MoviesRecycl
 
     private Context mContext;
     private ArrayList<Movie> mMovies;
-    protected ItemListener mListener;
+    protected MovieItemListener mListener;
 
 
-    public MoviesRecyclerViewAdapter(Context context, ArrayList<Movie> movies, ItemListener itemListener) {
+    public MoviesRecyclerViewAdapter(Context context, ArrayList<Movie> movies, MovieItemListener itemListener) {
         this.mContext = context;
         this.mMovies = movies;
         this.mListener = itemListener;
@@ -77,12 +79,9 @@ public class MoviesRecyclerViewAdapter extends RecyclerView.Adapter<MoviesRecycl
         @Override
         public void onClick(View view) {
             if (mListener != null) {
-                mListener.onItemClick(movie);
+                mListener.onItemClick(movie, DetailsActivity.class);
             }
         }
     }
 
-    public interface ItemListener {
-        void onItemClick(Movie movie);
-    }
 }

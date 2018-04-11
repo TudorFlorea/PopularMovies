@@ -1,6 +1,9 @@
 package com.example.tudor.popularmovies;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.os.Parcelable;
+import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.LoaderManager;
@@ -17,26 +20,37 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.tudor.popularmovies.adapters.FavoriteMoviesRecyclerViewAdapter;
 import com.example.tudor.popularmovies.adapters.MoviesRecyclerViewAdapter;
 import com.example.tudor.popularmovies.data.Movie;
 import com.example.tudor.popularmovies.data.MovieFactory;
+import com.example.tudor.popularmovies.database.MovieContract;
 import com.example.tudor.popularmovies.utils.InternetUtils;
 import com.example.tudor.popularmovies.utils.NetworkUtils;
+import com.example.tudor.popularmovies.utils.InterfaceUtils.MovieItemListener;
 
 import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<ArrayList<Movie>>, MoviesRecyclerViewAdapter.ItemListener {
+public class MainActivity extends AppCompatActivity implements MovieItemListener {
 
+
+    private ArrayList<Movie> mMovies;
     private BottomNavigationView mBottomNavigationView;
 
     private final String ACTION_RESET_LOADER = "action_reset";
     private final String ACTION_TOP_RATED = "top_rated";
     private final String ACTION_POPULAR = "most_popular";
-    private final int MOVIES_LOADER_ID = 100;
+    private final int MOVIES_API_LOADER_ID = 100;
+    private final int MOVIES_FAVORITE_LOADER_ID = 200;
     private final int MOVIE_POSTER_WIDTH = 185;
+
+    private FavoriteMoviesRecyclerViewAdapter mFavoriteMoviesAdapter;
+    private MoviesRecyclerViewAdapter mMoviesAdapter;
+    private Parcelable listState;
+    private GridLayoutManager mMoviesLayoutManager;
 
     @BindView(R.id.movies_rv) RecyclerView mMoviesRV;
 
@@ -47,64 +61,167 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         ButterKnife.bind(this);
 
-        GridLayoutManager manager = new GridLayoutManager(this, numberOfColumns(), GridLayoutManager.VERTICAL, false);
-        mMoviesRV.setLayoutManager(manager);
+        if (savedInstanceState != null) {
+            mMovies = savedInstanceState.getParcelableArrayList("movies");
+            mMoviesAdapter = new MoviesRecyclerViewAdapter(this, mMovies, this);
+        }
+
+        mFavoriteMoviesAdapter = new FavoriteMoviesRecyclerViewAdapter(this, null, this);
+
+        mMoviesLayoutManager = new GridLayoutManager(this, numberOfColumns(), GridLayoutManager.VERTICAL, false);
+        mMoviesRV.setLayoutManager(mMoviesLayoutManager);
 
         setupBottomNavigation();
 
-        if (InternetUtils.isNetworkAvailable(this)) {
-            getSupportLoaderManager().restartLoader(MOVIES_LOADER_ID, null, this);
-            getSupportActionBar().setTitle(R.string.top_rated_title);
+        if (getIntent().hasExtra("state")) {
+            Log.v("MAIN ACTIVITY: ", "HAS STATE");
+            if (getIntent().getExtras().getString("state").equals("favorite_movie_delete")) {
+                Log.v("MAIN ACTIVITY: ", "IS LOADING");
+                getSupportLoaderManager().restartLoader(MOVIES_FAVORITE_LOADER_ID, null, moviesCursorLoaderListener);
+                mBottomNavigationView.setSelectedItemId(R.id.action_bottom_favorite);
+            }
         } else {
-            //TODO handle the lack of internet on the UI
+            if (InternetUtils.isNetworkAvailable(this)) {
+                getSupportLoaderManager().restartLoader(MOVIES_API_LOADER_ID, null, moviesApiLoaderListener);
+                //getSupportActionBar().setTitle(R.string.top_rated_title);
+            } else {
+                //TODO handle the lack of internet on the UI
+            }
         }
 
 
+
+
     }
 
-    @Override
-    public Loader<ArrayList<Movie>> onCreateLoader(int id, final Bundle args) {
-        return new AsyncTaskLoader<ArrayList<Movie>>(this) {
+    private LoaderManager.LoaderCallbacks<ArrayList<Movie>> moviesApiLoaderListener = new LoaderManager.LoaderCallbacks<ArrayList<Movie>>() {
+        @Override
+        public Loader<ArrayList<Movie>> onCreateLoader(int id,final Bundle args) {
+            return new AsyncTaskLoader<ArrayList<Movie>>(MainActivity.this) {
 
-            @Override
-            protected void onStartLoading() {
-                super.onStartLoading();
-                forceLoad();
-            }
-
-            @Override
-            public ArrayList<Movie> loadInBackground() {
-                if (args != null) {
-                    String action = args.getString(ACTION_RESET_LOADER);
-
-                    switch (action) {
-                        case ACTION_TOP_RATED:
-                            return MovieFactory.getTopRatedMovies();
-                        case ACTION_POPULAR:
-                            return MovieFactory.getMostPopularMovies();
-                        default:
-                            return null;
-
-                    }
-                } else {
-                    return MovieFactory.getTopRatedMovies();
+                @Override
+                protected void onStartLoading() {
+                    super.onStartLoading();
+                    forceLoad();
                 }
 
+                @Override
+                public ArrayList<Movie> loadInBackground() {
+                    if (args != null) {
+                        String action = args.getString(ACTION_RESET_LOADER);
 
-            }
-        };
+                        switch (action) {
+                            case ACTION_TOP_RATED:
+                                return MovieFactory.getTopRatedMovies();
+                            case ACTION_POPULAR:
+                                return MovieFactory.getMostPopularMovies();
+                            default:
+                                return null;
+
+                        }
+                    } else {
+                        return MovieFactory.getTopRatedMovies();
+                    }
+
+
+                }
+            };
+        }
+
+        @Override
+        public void onLoadFinished(Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
+            mMovies = data;
+            MoviesRecyclerViewAdapter adapter = new MoviesRecyclerViewAdapter(MainActivity.this, data, MainActivity.this);
+            mMoviesRV.setAdapter(adapter);
+        }
+
+        @Override
+        public void onLoaderReset(Loader<ArrayList<Movie>> loader) {
+
+        }
+    };
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+        super.onSaveInstanceState(outState);
+
+        outState.putParcelableArrayList("movies", mMovies);
+
+        listState = mMoviesLayoutManager.onSaveInstanceState();
+
+        outState.putParcelable("list_state", listState);
     }
 
     @Override
-    public void onLoadFinished(Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
-        MoviesRecyclerViewAdapter adapter = new MoviesRecyclerViewAdapter(MainActivity.this, data, this);
-        mMoviesRV.setAdapter(adapter);
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            listState = savedInstanceState.getParcelable("list_state");
+        }
+
     }
 
     @Override
-    public void onLoaderReset(Loader<ArrayList<Movie>> loader) {
+    protected void onRestart() {
+        super.onRestart();
 
+        mMoviesLayoutManager.onRestoreInstanceState(listState);
     }
+
+    private LoaderManager.LoaderCallbacks<Cursor> moviesCursorLoaderListener = new LoaderManager.LoaderCallbacks<Cursor>() {
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            return new AsyncTaskLoader<Cursor>(MainActivity.this) {
+
+                Cursor mMovieData = null;
+
+                @Override
+                protected void onStartLoading() {
+                    if (mMovieData != null) {
+                        deliverResult(mMovieData);
+                    } else {
+                        forceLoad();
+                    }
+                }
+
+                @Override
+                public Cursor loadInBackground() {
+
+                    try {
+                        return getContentResolver().query(
+                                MovieContract.CONTENT_URI,
+                                null,
+                                null,
+                                null,
+                                null
+                        );
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                }
+
+                public void deliverResult(Cursor data) {
+                    mMovieData = data;
+                    super.deliverResult(data);
+                }
+            };
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            mFavoriteMoviesAdapter.swapCursor(data);
+            mMoviesRV.setAdapter(mFavoriteMoviesAdapter);
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+            mFavoriteMoviesAdapter.swapCursor(null);
+        }
+    };
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -133,8 +250,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     @Override
-    public void onItemClick(Movie movie) {
-        Intent i = new Intent(MainActivity.this, DetailsActivity.class);
+    public void onItemClick(Movie movie, Class targetActivity) {
+        Intent i = new Intent(MainActivity.this, targetActivity);
         i.putExtra(getResources().getString(R.string.intent_movie_key), movie);
         startActivity(i);
     }
@@ -143,7 +260,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         Bundle bundle = new Bundle();
         bundle.putString(ACTION_RESET_LOADER, action);
         if (InternetUtils.isNetworkAvailable(this)) {
-            getSupportLoaderManager().restartLoader(MOVIES_LOADER_ID, bundle, this);
+            getSupportLoaderManager().restartLoader(MOVIES_API_LOADER_ID, bundle, moviesApiLoaderListener);
         } else {
             //TODO handle the lack of internet on the UI
         }
@@ -180,7 +297,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                         return true;
 
                     case R.id.action_bottom_favorite:
-                        Toast.makeText(MainActivity.this, "Favorite", Toast.LENGTH_SHORT).show();
+                        getSupportLoaderManager().restartLoader(MOVIES_FAVORITE_LOADER_ID, null, moviesCursorLoaderListener);
+                        //Toast.makeText(MainActivity.this, "Favorite", Toast.LENGTH_SHORT).show();
                         return true;
                 }
 

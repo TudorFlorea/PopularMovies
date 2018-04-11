@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.AppBarLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/movie_appbar"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+    <android.support.design.widget.CollapsingToolbarLayout
+        android:id="@+id/movie_collapsing_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="280dp"
+        app:title="flex"
+        app:expandedTitleMarginBottom="100dp"
+        app:layout_scrollFlags="scroll|exitUntilCollapsed"
+        app:expandedTitleTextAppearance="@style/CollapsingTextAppearance"
+        app:contentScrim="?colorPrimary"
+        >
+
+        <ImageView
+            android:id="@+id/landscape_poster_iv"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop" />
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/movie_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@null"
+            app:layout_collapseMode="pin"
+            style="@style/ToolBarWithNavigationBack"
+            />
+
+    </android.support.design.widget.CollapsingToolbarLayout>
+
+</android.support.design.widget.AppBarLayout>
