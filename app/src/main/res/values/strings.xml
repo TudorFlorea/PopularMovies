@@ -9,5 +9,6 @@
     <string name="favorite_title">Favorites</string>
 
     <string name="release_date">Release date: </string>
+    <string name="title_activity_review">ReviewActivity</string>
 
 </resources>

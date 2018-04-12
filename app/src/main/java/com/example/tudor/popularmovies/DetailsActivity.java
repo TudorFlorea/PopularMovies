@@ -6,6 +6,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Parcelable;
+import android.os.PersistableBundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -67,13 +69,20 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     private TrailersRecyclerViewAdapter mTrailersRecyclerViewAdapter;
     private ReviewsRecyclerViewAdapter mReviewRecyclerViewAdapter;
     private final String ACTION_LOAD_MOVIE_WITH_ID = "id";
+    private final String MOVIE_KEY = "movie";
+    private final String TRAILERS_STATE_KEY = "trailers";
+    private final String REVIEWS_STATE_KEY = "reviews";
     private final int MOVIE_LOADER_ID = 100;
     private SnapHelper mSnapHelperTrailers;
     private SnapHelper mSnapHelperReviews;
     private int mMaxScrollSize;
     private boolean mIsImageHidden;
+    private Parcelable mTrailersListState;
+    private Parcelable mReviewsListState;
+    private LinearLayoutManager mTrailersLayoutManager;
+    private LinearLayoutManager mReviewsLayoutManager;
 
-    private Movie mMovie;
+    private Movie mMovie = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,85 +92,30 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
         ButterKnife.bind(this);
 
-        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onBackPressed();
-                finish();
-            }
-        });
+        setupAppBar();
 
-        mAppBar.addOnOffsetChangedListener(this);
-
-
-        mSnapHelperTrailers = new GravitySnapHelper(Gravity.START);
-        mSnapHelperReviews = new GravitySnapHelper(Gravity.START);
-
-        mFavoriteFAB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mMovie != null) {
-                    ContentValues movieCV = new ContentValues();
-
-                    movieCV.put(MovieEntry.COLUMN_MOVIE_ID, mMovie.getId());
-                    movieCV.put(MovieEntry.COLUMN_MOVIE_TITLE, mMovie.getTitle());
-                    movieCV.put(MovieEntry.COLUMN_RELEASE_DATE, mMovie.getReleaseDate());
-                    movieCV.put(MovieEntry.COLUMN_POSTER_PATH, mMovie.getPosterPath());
-                    movieCV.put(MovieEntry.COLUMN_BACKDROP_PATH, mMovie.getBackdropPath());
-                    movieCV.put(MovieEntry.COLUMN_VOTE_AVERAGE, mMovie.getVoteAverage());
-                    movieCV.put(MovieEntry.COLUMN_VOTE_COUNT, mMovie.getVoteCount());
-                    movieCV.put(MovieEntry.COLUMN_POPULARITY, mMovie.getPopularity());
-                    movieCV.put(MovieEntry.COLUMN_OVERVIEW, mMovie.getPlot());
-
-
-                    Uri insertedUri = getContentResolver().insert(MovieContract.CONTENT_URI, movieCV);
-
-                    if (insertedUri != null) {
-                        (new DownloadImage(mMovie.getPosterName())).execute(mMovie.getPosterLink());
-                        (new DownloadImage(mMovie.getBackdropName())).execute(mMovie.getBackdropLink());
-                        Toast.makeText(DetailsActivity.this,insertedUri.toString(), Toast.LENGTH_SHORT).show();
-                    }
-
-
-                }
-            }
-        });
+        setupFAB();
 
 
         try {
-            mMovie = getIntent().getExtras().getParcelable(getResources().getString(R.string.intent_movie_key));
 
-            Bundle movieCall = new Bundle();
-            movieCall.putString(ACTION_LOAD_MOVIE_WITH_ID, String.valueOf(mMovie.getId()));
+            if (savedInstanceState == null) {
+                mMovie = getIntent().getExtras().getParcelable(getResources().getString(R.string.intent_movie_key));
 
-            getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, movieCall, this);
+                Bundle movieCall = new Bundle();
+                movieCall.putString(ACTION_LOAD_MOVIE_WITH_ID, String.valueOf(mMovie.getId()));
 
-            // Picasso image loading
-                Picasso.with(this)
-                        .load(mMovie.getBackdropLink())
-                        .placeholder(R.drawable.walpaper_placeholder)
-                        .error(R.drawable.walpaper_error)
-                        .into(mBackdropImageView);
+                getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, movieCall, this);
+            } else {
+                mMovie = savedInstanceState.getParcelable(MOVIE_KEY);
 
-            Toast.makeText(this, getFileStreamPath(mMovie.getBackdropName()).toString(), Toast.LENGTH_LONG).show();
-
-            //ImageUtils.loadMovieImageFromStorage(this, mMovie.getBackdropPath(), mBackdropImageView);
+            }
 
 
-            mVoteAverageTextView.setText(String.valueOf(mMovie.getVoteAverage()));
-            mPlotTextView.setText(mMovie.getPlot());
-            mCollapsingToolbarLayout.setTitle(mMovie.getTitle());
-            mReleaseDateTextView.setText(getResources().getString(R.string.release_date) + mMovie.getReleaseDate());
-            mVoteCountTextView.setText(String.valueOf(mMovie.getVoteCount()));
-            mPopularityTextView.setText(String.format("%.0f", mMovie.getRoundPopularity()));
-            mTrailersRecyclerView.setLayoutManager(new LinearLayoutManager(DetailsActivity.this, LinearLayoutManager.HORIZONTAL, false));
-            mSnapHelperTrailers.attachToRecyclerView(mTrailersRecyclerView);
-            mReviewsRecyclerView.setLayoutManager(new LinearLayoutManager(DetailsActivity.this, LinearLayoutManager.HORIZONTAL, false));
-            mSnapHelperReviews.attachToRecyclerView(mReviewsRecyclerView);
+            setupMainUI();
 
         } catch (NullPointerException npe) {
             npe.printStackTrace();
-            //TODO implement error handling on the UI
         }
 
     }
@@ -195,13 +149,9 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     @Override
     public void onLoadFinished(Loader<Movie> loader, Movie movie) {
         mMovie = movie;
-        mTrailersRecyclerView.setHasFixedSize(true);
-        mReviewsRecyclerView.setHasFixedSize(true);
-        if (movie == null) Log.v("DETAILS ACTVIVITY", "Movie is null");
         ArrayList<Trailer> trailers = movie.getTrailers();
         ArrayList<Review> reviews = movie.getReviews();
-        Log.v("DETAILS ACTVIVITY", "Movie loaded");
-        Log.v("DETAILS ACTVIVITY", String.valueOf(trailers.size()));
+
         if (trailers.size() > 0) {
             mTrailersRecyclerViewAdapter = new TrailersRecyclerViewAdapter(trailers, DetailsActivity.this);
             mTrailersRecyclerView.setAdapter(mTrailersRecyclerViewAdapter);
@@ -283,18 +233,134 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         }
     }
 
-    public Bitmap loadImageBitmap(Context context, String imageName) {
-        Bitmap bitmap = null;
-        FileInputStream fiStream;
-        try {
-            fiStream    = context.openFileInput(imageName);
-            bitmap      = BitmapFactory.decodeStream(fiStream);
-            fiStream.close();
-        } catch (Exception e) {
-            Log.d("saveImage", "Exception 3, Something went wrong!");
-            e.printStackTrace();
-        }
-        return bitmap;
+    private void setupAppBar() {
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onBackPressed();
+                finish();
+            }
+        });
+
+        mAppBar.addOnOffsetChangedListener(this);
+
     }
 
+    private void setupFAB() {
+        mFavoriteFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mMovie != null) {
+                    ContentValues movieCV = new ContentValues();
+
+                    movieCV.put(MovieEntry.COLUMN_MOVIE_ID, mMovie.getId());
+                    movieCV.put(MovieEntry.COLUMN_MOVIE_TITLE, mMovie.getTitle());
+                    movieCV.put(MovieEntry.COLUMN_RELEASE_DATE, mMovie.getReleaseDate());
+                    movieCV.put(MovieEntry.COLUMN_POSTER_PATH, mMovie.getPosterPath());
+                    movieCV.put(MovieEntry.COLUMN_BACKDROP_PATH, mMovie.getBackdropPath());
+                    movieCV.put(MovieEntry.COLUMN_VOTE_AVERAGE, mMovie.getVoteAverage());
+                    movieCV.put(MovieEntry.COLUMN_VOTE_COUNT, mMovie.getVoteCount());
+                    movieCV.put(MovieEntry.COLUMN_POPULARITY, mMovie.getPopularity());
+                    movieCV.put(MovieEntry.COLUMN_OVERVIEW, mMovie.getPlot());
+
+
+                    Uri insertedUri = getContentResolver().insert(MovieContract.CONTENT_URI, movieCV);
+
+                    if (insertedUri != null) {
+                        (new DownloadImage(mMovie.getPosterName())).execute(mMovie.getPosterLink());
+                        (new DownloadImage(mMovie.getBackdropName())).execute(mMovie.getBackdropLink());
+                        Toast.makeText(DetailsActivity.this,insertedUri.toString(), Toast.LENGTH_SHORT).show();
+                    }
+
+
+                }
+            }
+        });
+    }
+
+    private void setupMainUI() {
+        // Picasso image loading
+        Picasso.with(this)
+                .load(mMovie.getBackdropLink())
+                .placeholder(R.drawable.walpaper_placeholder)
+                .error(R.drawable.walpaper_error)
+                .into(mBackdropImageView);
+
+        //Movie title
+        mCollapsingToolbarLayout.setTitle(mMovie.getTitle());
+
+        //Movie plot
+        mPlotTextView.setText(mMovie.getPlot());
+
+        //Release date
+        mReleaseDateTextView.setText(getResources().getString(R.string.release_date) + mMovie.getReleaseDate());
+
+        //Average vote
+        mVoteAverageTextView.setText(String.valueOf(mMovie.getVoteAverage()));
+
+        //Vote count
+
+        mVoteCountTextView.setText(String.valueOf(mMovie.getVoteCount()));
+
+        //Popularity
+        mPopularityTextView.setText(String.format("%.0f", mMovie.getRoundPopularity()));
+
+        //Trailers RV
+        mTrailersLayoutManager = new LinearLayoutManager(DetailsActivity.this, LinearLayoutManager.HORIZONTAL, false);
+        mTrailersRecyclerView.setLayoutManager(mTrailersLayoutManager);
+        mTrailersRecyclerView.setHasFixedSize(true);
+        if (mMovie != null) {
+            mTrailersRecyclerViewAdapter = new TrailersRecyclerViewAdapter(mMovie.getTrailers(), DetailsActivity.this);
+            mTrailersRecyclerView.setAdapter(mTrailersRecyclerViewAdapter);
+        }
+
+        mSnapHelperTrailers = new GravitySnapHelper(Gravity.START);
+        mSnapHelperTrailers.attachToRecyclerView(mTrailersRecyclerView);
+
+        //Reviews RV
+        mReviewsLayoutManager = new LinearLayoutManager(DetailsActivity.this, LinearLayoutManager.HORIZONTAL, false);
+        mReviewsRecyclerView.setLayoutManager(mReviewsLayoutManager);
+        mReviewsRecyclerView.setHasFixedSize(true);
+        if (mMovie != null) {
+            mReviewRecyclerViewAdapter = new ReviewsRecyclerViewAdapter(mMovie.getReviews(), DetailsActivity.this);
+            mReviewsRecyclerView.setAdapter(mReviewRecyclerViewAdapter);
+        }
+
+
+        mSnapHelperReviews = new GravitySnapHelper(Gravity.START);
+        mSnapHelperReviews.attachToRecyclerView(mReviewsRecyclerView);
+
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        mTrailersListState = mTrailersLayoutManager.onSaveInstanceState();
+        mReviewsListState = mReviewsLayoutManager.onSaveInstanceState();
+
+        outState.putParcelable(MOVIE_KEY, mMovie);
+        outState.putParcelable(TRAILERS_STATE_KEY, mTrailersListState);
+        outState.putParcelable(REVIEWS_STATE_KEY, mReviewsListState);
+
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            mTrailersListState = savedInstanceState.getParcelable(TRAILERS_STATE_KEY);
+            mReviewsListState = savedInstanceState.getParcelable(REVIEWS_STATE_KEY);
+        }
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        mTrailersLayoutManager.onRestoreInstanceState(mTrailersListState);
+        mReviewsLayoutManager.onRestoreInstanceState(mReviewsListState);
+
+    }
 }

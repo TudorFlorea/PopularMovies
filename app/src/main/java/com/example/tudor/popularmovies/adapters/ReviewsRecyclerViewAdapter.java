@@ -1,6 +1,7 @@
 package com.example.tudor.popularmovies.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Point;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -14,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.tudor.popularmovies.R;
+import com.example.tudor.popularmovies.ReviewActivity;
 import com.example.tudor.popularmovies.data.Review;
 
 import java.util.ArrayList;
@@ -55,6 +57,9 @@ public class ReviewsRecyclerViewAdapter extends RecyclerView.Adapter<ReviewsRecy
     public class ReviewViewHolder extends RecyclerView.ViewHolder {
 
         private Review mReview;
+        private final String REVIEW_CONTENT = "content";
+        private final String REVIEW_AUTHOR = "author";
+        private final String REVIEW_URL = "url";
 
         @BindView(R.id.single_review_cv) CardView mReviewCardView;
         @BindView(R.id.review_content_tv) TextView mReviewContentTextView;
@@ -69,13 +74,17 @@ public class ReviewsRecyclerViewAdapter extends RecyclerView.Adapter<ReviewsRecy
 
         }
 
-        public void setData(Review review) {
-            mReviewContentTextView.setText(review.getShrotContent());
+        public void setData(final Review review) {
+            mReviewContentTextView.setText(review.getShortContent());
             mReviewAuthorTextView.setText(review.getAuthor());
             mReviewReadMoreButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Toast.makeText(mContext, "Working", Toast.LENGTH_SHORT).show();
+                    Intent i = new Intent(mContext, ReviewActivity.class);
+                    i.putExtra(REVIEW_CONTENT, review.getContent());
+                    i.putExtra(REVIEW_AUTHOR, review.getAuthor());
+                    i.putExtra(REVIEW_URL, review.getUrl());
+                    mContext.startActivity(i);
                 }
             });
         }

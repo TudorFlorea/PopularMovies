@@ -26,7 +26,6 @@ import com.example.tudor.popularmovies.data.Movie;
 import com.example.tudor.popularmovies.data.MovieFactory;
 import com.example.tudor.popularmovies.database.MovieContract;
 import com.example.tudor.popularmovies.utils.InternetUtils;
-import com.example.tudor.popularmovies.utils.NetworkUtils;
 import com.example.tudor.popularmovies.utils.InterfaceUtils.MovieItemListener;
 
 import java.util.ArrayList;
@@ -43,6 +42,10 @@ public class MainActivity extends AppCompatActivity implements MovieItemListener
     private final String ACTION_RESET_LOADER = "action_reset";
     private final String ACTION_TOP_RATED = "top_rated";
     private final String ACTION_POPULAR = "most_popular";
+    private final String MOVIES_KEY = "movies";
+    private final String RECYCLER_VIEW_STATE_KEY = "state";
+    private final String LIST_STATE_KEY = "list_state";
+    private final String FAVORITE_MOVIE_DELETE_KEY = "favorite_movie_delete";
     private final int MOVIES_API_LOADER_ID = 100;
     private final int MOVIES_FAVORITE_LOADER_ID = 200;
     private final int MOVIE_POSTER_WIDTH = 185;
@@ -62,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements MovieItemListener
         ButterKnife.bind(this);
 
         if (savedInstanceState != null) {
-            mMovies = savedInstanceState.getParcelableArrayList("movies");
+            mMovies = savedInstanceState.getParcelableArrayList(MOVIES_KEY);
             mMoviesAdapter = new MoviesRecyclerViewAdapter(this, mMovies, this);
         }
 
@@ -73,17 +76,14 @@ public class MainActivity extends AppCompatActivity implements MovieItemListener
 
         setupBottomNavigation();
 
-        if (getIntent().hasExtra("state")) {
-            Log.v("MAIN ACTIVITY: ", "HAS STATE");
-            if (getIntent().getExtras().getString("state").equals("favorite_movie_delete")) {
-                Log.v("MAIN ACTIVITY: ", "IS LOADING");
+        if (getIntent().hasExtra(RECYCLER_VIEW_STATE_KEY)) {
+            if (getIntent().getExtras().getString(RECYCLER_VIEW_STATE_KEY).equals(FAVORITE_MOVIE_DELETE_KEY)) {
                 getSupportLoaderManager().restartLoader(MOVIES_FAVORITE_LOADER_ID, null, moviesCursorLoaderListener);
                 mBottomNavigationView.setSelectedItemId(R.id.action_bottom_favorite);
             }
         } else {
             if (InternetUtils.isNetworkAvailable(this)) {
                 getSupportLoaderManager().restartLoader(MOVIES_API_LOADER_ID, null, moviesApiLoaderListener);
-                //getSupportActionBar().setTitle(R.string.top_rated_title);
             } else {
                 //TODO handle the lack of internet on the UI
             }
@@ -93,6 +93,10 @@ public class MainActivity extends AppCompatActivity implements MovieItemListener
 
 
     }
+
+    /********************************************
+     * LoaderCallbacks implementations
+     ********************************************/
 
     private LoaderManager.LoaderCallbacks<ArrayList<Movie>> moviesApiLoaderListener = new LoaderManager.LoaderCallbacks<ArrayList<Movie>>() {
         @Override
@@ -140,35 +144,6 @@ public class MainActivity extends AppCompatActivity implements MovieItemListener
 
         }
     };
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-
-        super.onSaveInstanceState(outState);
-
-        outState.putParcelableArrayList("movies", mMovies);
-
-        listState = mMoviesLayoutManager.onSaveInstanceState();
-
-        outState.putParcelable("list_state", listState);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-
-        if (savedInstanceState != null) {
-            listState = savedInstanceState.getParcelable("list_state");
-        }
-
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-
-        mMoviesLayoutManager.onRestoreInstanceState(listState);
-    }
 
     private LoaderManager.LoaderCallbacks<Cursor> moviesCursorLoaderListener = new LoaderManager.LoaderCallbacks<Cursor>() {
         @Override
@@ -222,6 +197,83 @@ public class MainActivity extends AppCompatActivity implements MovieItemListener
         }
     };
 
+    /********************************************
+     * Interfaces implementation
+     ********************************************/
+
+    @Override
+    public void onItemClick(Movie movie, Class targetActivity) {
+        Intent i = new Intent(MainActivity.this, targetActivity);
+        i.putExtra(getResources().getString(R.string.intent_movie_key), movie);
+        startActivity(i);
+    }
+
+    /********************************************
+     * Activity lifecycle methods
+     ********************************************/
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+        super.onSaveInstanceState(outState);
+
+        outState.putParcelableArrayList(MOVIES_KEY, mMovies);
+
+        listState = mMoviesLayoutManager.onSaveInstanceState();
+
+        outState.putParcelable(LIST_STATE_KEY, listState);
+
+
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            listState = savedInstanceState.getParcelable(LIST_STATE_KEY);
+        }
+
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        mMoviesLayoutManager.onRestoreInstanceState(listState);
+    }
+
+
+    /********************************************
+     * Helper methods
+     ********************************************/
+
+    private void resetMoviesLoader(String action) {
+        Bundle bundle = new Bundle();
+        bundle.putString(ACTION_RESET_LOADER, action);
+        if (InternetUtils.isNetworkAvailable(this)) {
+            getSupportLoaderManager().restartLoader(MOVIES_API_LOADER_ID, bundle, moviesApiLoaderListener);
+        } else {
+            //TODO handle the lack of internet on the UI
+        }
+    }
+
+    private int numberOfColumns() {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int widthDivider = MOVIE_POSTER_WIDTH * 2;
+        int width = displayMetrics.widthPixels;
+        int nColumns = width / widthDivider;
+        if (nColumns < 2) {
+            return 2;
+        } else {
+            return nColumns;
+        }
+
+    }
+
+    /********************************************
+     * UI METHODS
+     ********************************************/
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -249,37 +301,6 @@ public class MainActivity extends AppCompatActivity implements MovieItemListener
         return true;
     }
 
-    @Override
-    public void onItemClick(Movie movie, Class targetActivity) {
-        Intent i = new Intent(MainActivity.this, targetActivity);
-        i.putExtra(getResources().getString(R.string.intent_movie_key), movie);
-        startActivity(i);
-    }
-
-    private void resetMoviesLoader(String action) {
-        Bundle bundle = new Bundle();
-        bundle.putString(ACTION_RESET_LOADER, action);
-        if (InternetUtils.isNetworkAvailable(this)) {
-            getSupportLoaderManager().restartLoader(MOVIES_API_LOADER_ID, bundle, moviesApiLoaderListener);
-        } else {
-            //TODO handle the lack of internet on the UI
-        }
-    }
-
-    private int numberOfColumns() {
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int widthDivider = MOVIE_POSTER_WIDTH * 2;
-        int width = displayMetrics.widthPixels;
-        int nColumns = width / widthDivider;
-        if (nColumns < 2) {
-            return 2;
-        } else {
-            return nColumns;
-        }
-
-    }
-
     private void setupBottomNavigation() {
         mBottomNavigationView = findViewById(R.id.bottom_navigation);
 
@@ -298,7 +319,6 @@ public class MainActivity extends AppCompatActivity implements MovieItemListener
 
                     case R.id.action_bottom_favorite:
                         getSupportLoaderManager().restartLoader(MOVIES_FAVORITE_LOADER_ID, null, moviesCursorLoaderListener);
-                        //Toast.makeText(MainActivity.this, "Favorite", Toast.LENGTH_SHORT).show();
                         return true;
                 }
 
