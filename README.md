@@ -9,9 +9,9 @@ In order for the project to work you need a themoviedb api key. The key needs to
 private static String API_KEY = ApiUtils.getApiKey(); // Replace with your api key
 
 ## Screenshots
-<img align="left"  src="https://user-images.githubusercontent.com/17934944/38707600-a90b9c94-3eba-11e8-861d-966fdcecdd80.png" width="300">
-<img align="left"  src="https://user-images.githubusercontent.com/17934944/38707611-b6dd610e-3eba-11e8-9e4b-cba85ea28d87.png" width="300">
-<img align="left"  src="https://user-images.githubusercontent.com/17934944/38707624-c7bdeb4c-3eba-11e8-879a-05bded23690a.png" width="300">
+<img   src="https://user-images.githubusercontent.com/17934944/38707600-a90b9c94-3eba-11e8-861d-966fdcecdd80.png" width="300">
+<img  src="https://user-images.githubusercontent.com/17934944/38707611-b6dd610e-3eba-11e8-9e4b-cba85ea28d87.png" width="300">
+<img  src="https://user-images.githubusercontent.com/17934944/38707624-c7bdeb4c-3eba-11e8-879a-05bded23690a.png" width="300">
 
 ## Common Project Requirements
 - [x] App is written solely in the Java Programming Language.
@@ -30,7 +30,7 @@ private static String API_KEY = ApiUtils.getApiKey(); // Replace with your api k
 - [x] When a trailer is selected, app uses an Intent to launch the trailer.
 - [x] In the movies detail screen, a user can tap a button(for example, a star) to mark it as a Favorite.
 
-## Network API Implementation 
+## Network API Implementation
 - [x] In a background thread, app queries the /movie/popular or /movie/top_rated API for the sort criteria specified in the settings menu.
 
 - [x] App requests for related videos for a selected movie via the /movie/{id}/videos endpoint in a background thread and displays those details when the user selects a movie.
