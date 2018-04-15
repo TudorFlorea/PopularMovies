@@ -10,5 +10,7 @@
 
     <string name="release_date">Release date: </string>
     <string name="title_activity_review">ReviewActivity</string>
+    
+    <string name="sort_criteria_preference">sort</string>
 
 </resources>

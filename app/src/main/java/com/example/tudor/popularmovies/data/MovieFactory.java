@@ -67,6 +67,9 @@ public class MovieFactory {
         } catch (JSONException jse) {
             jse.printStackTrace();
             return null;
+        } catch (NullPointerException npe) {
+            npe.printStackTrace();
+            return null;
         }
 
     }
@@ -95,6 +98,9 @@ public class MovieFactory {
             return moviesList;
         } catch (JSONException jse) {
             jse.printStackTrace();
+            return null;
+        } catch (NullPointerException npe) {
+            npe.printStackTrace();
             return null;
         }
     }

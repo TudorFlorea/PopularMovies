@@ -15,6 +15,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewCompat;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
@@ -25,6 +26,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
@@ -37,6 +39,7 @@ import com.example.tudor.popularmovies.data.Review;
 import com.example.tudor.popularmovies.data.Trailer;
 import com.example.tudor.popularmovies.database.MovieContract;
 import com.example.tudor.popularmovies.database.MovieContract.MovieEntry;
+import com.example.tudor.popularmovies.utils.InternetUtils;
 import com.github.rubensousa.gravitysnaphelper.GravitySnapHelper;
 import com.squareup.picasso.Picasso;
 
@@ -54,6 +57,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     @BindView(R.id.landscape_poster_iv) ImageView mBackdropImageView;
     @BindView(R.id.movie_vote_average_tv) TextView mVoteAverageTextView;
     @BindView(R.id.movie_plot_tv) TextView mPlotTextView;
+    @BindView(R.id.movie_sv) NestedScrollView mNestedScrollView;
     @BindView(R.id.trailers_rv) RecyclerView mTrailersRecyclerView;
     @BindView(R.id.reviews_rv) RecyclerView mReviewsRecyclerView;
     @BindView(R.id.movie_vote_count_tv) TextView mVoteCountTextView;
@@ -64,6 +68,8 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     @BindView(R.id.movie_toolbar) Toolbar mToolbar;
     @BindView(R.id.movie_appbar) AppBarLayout mAppBar;
     @BindView(R.id.movie_collapsing_toolbar) CollapsingToolbarLayout mCollapsingToolbarLayout;
+    @BindView(R.id.details_no_internet_tv) TextView mNoInternetTextView;
+    @BindView(R.id.details_no_internet_layout) LinearLayout mNoInternetLayout;
 
     private final int PERCENTAGE_TO_SHOW_IMAGE = 20;
     private TrailersRecyclerViewAdapter mTrailersRecyclerViewAdapter;
@@ -96,27 +102,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
         setupFAB();
 
-
-        try {
-
-            if (savedInstanceState == null) {
-                mMovie = getIntent().getExtras().getParcelable(getResources().getString(R.string.intent_movie_key));
-
-                Bundle movieCall = new Bundle();
-                movieCall.putString(ACTION_LOAD_MOVIE_WITH_ID, String.valueOf(mMovie.getId()));
-
-                getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, movieCall, this);
-            } else {
-                mMovie = savedInstanceState.getParcelable(MOVIE_KEY);
-
-            }
-
-
-            setupMainUI();
-
-        } catch (NullPointerException npe) {
-            npe.printStackTrace();
-        }
+        setupUI(savedInstanceState);
 
     }
 
@@ -278,7 +264,26 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         });
     }
 
+    private void noInternetUI(final Bundle savedInstanceState) {
+        mAppBar.setVisibility(View.GONE);
+        mNestedScrollView.setVisibility(View.GONE);
+        mFavoriteFAB.setVisibility(View.GONE);
+        mNoInternetLayout.setVisibility(View.VISIBLE);
+        mNoInternetLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setupUI(savedInstanceState);
+            }
+        });
+    }
+
     private void setupMainUI() {
+
+        mAppBar.setVisibility(View.VISIBLE);
+        mNestedScrollView.setVisibility(View.VISIBLE);
+        mFavoriteFAB.setVisibility(View.VISIBLE);
+        mNoInternetLayout.setVisibility(View.GONE);
+
         // Picasso image loading
         Picasso.with(this)
                 .load(mMovie.getBackdropLink())
@@ -332,6 +337,33 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
     }
 
+    private void setupUI(Bundle savedInstanceState) {
+        if (InternetUtils.isNetworkAvailable(this)) {
+            try {
+
+                if (savedInstanceState == null) {
+                    mMovie = getIntent().getExtras().getParcelable(getResources().getString(R.string.intent_movie_key));
+
+                    Bundle movieCall = new Bundle();
+                    movieCall.putString(ACTION_LOAD_MOVIE_WITH_ID, String.valueOf(mMovie.getId()));
+
+                    getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, movieCall, this);
+                } else {
+                    mMovie = savedInstanceState.getParcelable(MOVIE_KEY);
+
+                }
+
+
+                setupMainUI();
+
+            } catch (NullPointerException npe) {
+                npe.printStackTrace();
+            }
+        } else {
+            noInternetUI(savedInstanceState);
+        }
+    }
+
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -361,6 +393,5 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
         mTrailersLayoutManager.onRestoreInstanceState(mTrailersListState);
         mReviewsLayoutManager.onRestoreInstanceState(mReviewsListState);
-
     }
 }

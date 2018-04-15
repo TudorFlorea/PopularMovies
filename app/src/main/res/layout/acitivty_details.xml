@@ -11,6 +11,27 @@
     <include layout="@layout/movie_nested_scroll_view" />
 
     <include layout="@layout/movie_fab" />
+    <LinearLayout
+        android:id="@+id/details_no_internet_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/ic_replay"/>
+
+        <TextView
+            android:id="@+id/details_no_internet_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textSize="@dimen/large_text_size"
+            android:text="No internet. Tap to retry!"/>
+
+    </LinearLayout>
 
 
 </android.support.design.widget.CoordinatorLayout>
