@@ -6,14 +6,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/popular_movies_rv"
+        android:id="@+id/top_rated_movies_rv"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_above="@+id/bottom_navigation"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         />
 
     <LinearLayout
-        android:id="@+id/most_popular_no_internet_layout"
+        android:id="@+id/top_rated_no_internet_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"

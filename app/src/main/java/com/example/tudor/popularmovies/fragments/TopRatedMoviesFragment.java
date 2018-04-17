@@ -10,7 +10,6 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,26 +29,24 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 /**
- * Created by tudor on 15.04.2018.
+ * Created by tudor on 16.04.2018.
  */
 
-public class MostPopularMoviesFragment extends Fragment implements LoaderManager.LoaderCallbacks<ArrayList<Movie>>, InterfaceUtils.MovieItemListener {
+public class TopRatedMoviesFragment extends Fragment implements LoaderManager.LoaderCallbacks<ArrayList<Movie>>, InterfaceUtils.MovieItemListener{
 
-    @BindView(R.id.popular_movies_rv) RecyclerView mPopularMoviesRecyclerView;
-    @BindView(R.id.most_popular_no_internet_layout) LinearLayout mNoInternetLayout;
+    @BindView(R.id.top_rated_movies_rv) RecyclerView mTopRatedMoviesRecyclerView;
+    @BindView(R.id.top_rated_no_internet_layout) LinearLayout mNoInternetLayout;
     private MoviesRecyclerViewAdapter mMoviesAdapter;
     private GridLayoutManager mMoviesLayoutManager;
 
+    private final int TOP_RATED_MOVIES_LOADER_ID = 200;
     private final int MOVIE_POSTER_WIDTH = 185;
     public final String RV_STATE_KEY = "recycler_list_state";
     public final String MOVIES_STATE_KEY = "movies_state";
-    private final int MOST_POPULAR_MOVIES_LOADER_ID = 100;
     private Parcelable mRecyclerViewState;
     private ArrayList<Movie> mMovies;
 
-
-
-    public MostPopularMoviesFragment() {
+    public TopRatedMoviesFragment() {
 
     }
 
@@ -59,54 +56,50 @@ public class MostPopularMoviesFragment extends Fragment implements LoaderManager
         setRetainInstance(true);
     }
 
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_most_popular, container, false);
+        return inflater.inflate(R.layout.fragment_top_rated, container, false);
     }
 
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ButterKnife.bind(this, view);
 
         mNoInternetLayout.setVisibility(View.GONE);
-        mPopularMoviesRecyclerView.setHasFixedSize(true);
+        mTopRatedMoviesRecyclerView.setHasFixedSize(true);
         mMoviesLayoutManager = new GridLayoutManager(getActivity(), DisplayUtils.numberOfColumns(getActivity().getWindowManager(), MOVIE_POSTER_WIDTH ), GridLayoutManager.VERTICAL, false);
-        mPopularMoviesRecyclerView.setLayoutManager(mMoviesLayoutManager);
+        mTopRatedMoviesRecyclerView.setLayoutManager(mMoviesLayoutManager);
 
         if (savedInstanceState != null) {
             if (savedInstanceState.containsKey(MOVIES_STATE_KEY)) {
                 mMovies = savedInstanceState.getParcelableArrayList(MOVIES_STATE_KEY);
                 mMoviesAdapter = new MoviesRecyclerViewAdapter(getActivity(), mMovies, this);
-                mPopularMoviesRecyclerView.setAdapter(mMoviesAdapter);
+                mTopRatedMoviesRecyclerView.setAdapter(mMoviesAdapter);
             }
         } else {
             if (InternetUtils.isNetworkAvailable(getContext())) {
-                mPopularMoviesRecyclerView.setVisibility(View.VISIBLE);
+                mTopRatedMoviesRecyclerView.setVisibility(View.VISIBLE);
                 mMoviesAdapter = new MoviesRecyclerViewAdapter(getActivity(), null, this);
-                mPopularMoviesRecyclerView.setAdapter(mMoviesAdapter);
-                getActivity().getSupportLoaderManager().restartLoader(MOST_POPULAR_MOVIES_LOADER_ID, null, this);
+                mTopRatedMoviesRecyclerView.setAdapter(mMoviesAdapter);
+                getActivity().getSupportLoaderManager().restartLoader(TOP_RATED_MOVIES_LOADER_ID, null, this);
             } else {
-                mPopularMoviesRecyclerView.setVisibility(View.GONE);
+                mTopRatedMoviesRecyclerView.setVisibility(View.GONE);
                 mNoInternetLayout.setVisibility(View.VISIBLE);
                 mNoInternetLayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        getActivity().getSupportLoaderManager().restartLoader(MOST_POPULAR_MOVIES_LOADER_ID, null, MostPopularMoviesFragment.this);
+                        getActivity().getSupportLoaderManager().restartLoader(TOP_RATED_MOVIES_LOADER_ID, null, TopRatedMoviesFragment.this);
                     }
                 });
             }
         }
-
-
-
     }
 
     @Override
     public Loader<ArrayList<Movie>> onCreateLoader(int id, Bundle args) {
-        return new AsyncTaskLoader<ArrayList<Movie>>(getContext()) {
+        return new AsyncTaskLoader<ArrayList<Movie>>(getActivity()) {
 
             @Override
             protected void onStartLoading() {
@@ -116,7 +109,7 @@ public class MostPopularMoviesFragment extends Fragment implements LoaderManager
 
             @Override
             public ArrayList<Movie> loadInBackground() {
-                return MovieFactory.getMostPopularMovies();
+                return MovieFactory.getTopRatedMovies();
             }
         };
     }
@@ -125,10 +118,10 @@ public class MostPopularMoviesFragment extends Fragment implements LoaderManager
     public void onLoadFinished(Loader<ArrayList<Movie>> loader, ArrayList<Movie> movies) {
         if (movies != null) {
             mNoInternetLayout.setVisibility(View.GONE);
-            mPopularMoviesRecyclerView.setVisibility(View.VISIBLE);
+            mTopRatedMoviesRecyclerView.setVisibility(View.VISIBLE);
             mMovies = movies;
             mMoviesAdapter = new MoviesRecyclerViewAdapter(getActivity(), movies, this);
-            mPopularMoviesRecyclerView.setAdapter(mMoviesAdapter);
+            mTopRatedMoviesRecyclerView.setAdapter(mMoviesAdapter);
             mMoviesAdapter.notifyDataSetChanged();
         }
     }
@@ -140,14 +133,12 @@ public class MostPopularMoviesFragment extends Fragment implements LoaderManager
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
 
         outState.putParcelableArrayList(MOVIES_STATE_KEY, mMovies);
 
         mRecyclerViewState = mMoviesLayoutManager.onSaveInstanceState();
         outState.putParcelable(RV_STATE_KEY, mRecyclerViewState);
-
-
-        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -158,11 +149,6 @@ public class MostPopularMoviesFragment extends Fragment implements LoaderManager
             mRecyclerViewState = savedInstanceState.getParcelable(RV_STATE_KEY);
         }
 
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
     }
 
     @Override

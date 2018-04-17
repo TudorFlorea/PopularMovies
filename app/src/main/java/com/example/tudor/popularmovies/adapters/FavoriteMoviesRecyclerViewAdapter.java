@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.example.tudor.popularmovies.FavoriteActivity;
+import com.example.tudor.popularmovies.data.MovieFactory;
 import com.example.tudor.popularmovies.database.MovieContract.MovieEntry;
 import com.example.tudor.popularmovies.R;
 import com.example.tudor.popularmovies.data.Movie;
@@ -66,20 +67,7 @@ public class FavoriteMoviesRecyclerViewAdapter extends CursorRecyclerViewAdapter
 
         public void setData(Cursor cursor) {
 
-            long id = cursor.getLong(cursor.getColumnIndexOrThrow(MovieEntry.COLUMN_MOVIE_ID));
-            long databaseId = cursor.getLong(cursor.getColumnIndexOrThrow(MovieEntry._ID));
-            String title = cursor.getString(cursor.getColumnIndexOrThrow(MovieEntry.COLUMN_MOVIE_TITLE));
-            String releseDate = cursor.getString(cursor.getColumnIndexOrThrow(MovieEntry.COLUMN_RELEASE_DATE));
-            String posterPath = cursor.getString(cursor.getColumnIndexOrThrow(MovieEntry.COLUMN_POSTER_PATH));
-            String backdropPath = cursor.getString(cursor.getColumnIndexOrThrow(MovieEntry.COLUMN_BACKDROP_PATH));
-            double voteAverage = cursor.getDouble(cursor.getColumnIndexOrThrow(MovieEntry.COLUMN_VOTE_AVERAGE));
-            long voteCount = cursor.getLong(cursor.getColumnIndexOrThrow(MovieEntry.COLUMN_VOTE_COUNT));
-            double popularity = cursor.getDouble(cursor.getColumnIndexOrThrow(MovieEntry.COLUMN_POPULARITY));
-            String plot = cursor.getString(cursor.getColumnIndexOrThrow(MovieEntry.COLUMN_OVERVIEW));
-
-            mMovie = new Movie(id, title, releseDate, posterPath, backdropPath, voteAverage, plot, voteCount, popularity, null, null);
-
-            mMovie.setDatabaseId(databaseId);
+            mMovie = MovieFactory.fromCursor(cursor);
 
             Picasso.with(mContext)
                     .load(mMovie.getPosterLink())
