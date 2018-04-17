@@ -1,7 +1,9 @@
 package com.example.tudor.popularmovies.data;
 
+import android.database.Cursor;
 import android.util.Log;
 
+import com.example.tudor.popularmovies.database.MovieContract;
 import com.example.tudor.popularmovies.utils.JsonUtils;
 import com.example.tudor.popularmovies.utils.NetworkUtils;
 
@@ -117,11 +119,43 @@ public class MovieFactory {
             return extractMovieFromJsonObject(movieJson);
     }
 
+    public static Movie fromCursor(Cursor cursor) {
+
+        Movie movie;
+
+        long id = cursor.getLong(cursor.getColumnIndexOrThrow(MovieContract.MovieEntry.COLUMN_MOVIE_ID));
+        long databaseId = cursor.getLong(cursor.getColumnIndexOrThrow(MovieContract.MovieEntry._ID));
+        String title = cursor.getString(cursor.getColumnIndexOrThrow(MovieContract.MovieEntry.COLUMN_MOVIE_TITLE));
+        String releseDate = cursor.getString(cursor.getColumnIndexOrThrow(MovieContract.MovieEntry.COLUMN_RELEASE_DATE));
+        String posterPath = cursor.getString(cursor.getColumnIndexOrThrow(MovieContract.MovieEntry.COLUMN_POSTER_PATH));
+        String backdropPath = cursor.getString(cursor.getColumnIndexOrThrow(MovieContract.MovieEntry.COLUMN_BACKDROP_PATH));
+        double voteAverage = cursor.getDouble(cursor.getColumnIndexOrThrow(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE));
+        long voteCount = cursor.getLong(cursor.getColumnIndexOrThrow(MovieContract.MovieEntry.COLUMN_VOTE_COUNT));
+        double popularity = cursor.getDouble(cursor.getColumnIndexOrThrow(MovieContract.MovieEntry.COLUMN_POPULARITY));
+        String plot = cursor.getString(cursor.getColumnIndexOrThrow(MovieContract.MovieEntry.COLUMN_OVERVIEW));
+
+        movie = new Movie(id, title, releseDate, posterPath, backdropPath, voteAverage, plot, voteCount, popularity, null, null);
+        movie.setDatabaseId(databaseId);
+
+        return movie;
+    }
+
+    public static ArrayList<Movie> listFromCursor(Cursor cursor) {
+        ArrayList<Movie> movies = new ArrayList<>();
+
+        while (cursor.moveToNext()) {
+            movies.add(fromCursor(cursor));
+        }
+
+        return movies;
+    }
+
     /**
      *
      * @param movieJsonObj
      * @return Movie object
      */
+
 
     private static Movie extractMovieFromJsonObject(JSONObject movieJsonObj) {
 

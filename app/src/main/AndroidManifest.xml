@@ -16,7 +16,8 @@
             android:name=".database.MovieProvider"
             android:authorities="com.example.tudor.popularmovies" />
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"
+            android:noHistory="false">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
